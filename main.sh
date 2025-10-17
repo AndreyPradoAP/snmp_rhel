@@ -46,7 +46,7 @@ update_system() {
 download_snmpd() {
     print_info "Iniciando instalação do net-snmp e dependências..."
 
-    if dnf sudo dnf install net-snmp net-snmp-utils net-snmp-devel -y; then
+    if dnf install net-snmp net-snmp-utils net-snmp-devel -y; then
         print_success "Pacotes instalados com sucesso!"
     else
         print_error "Falha ao instalar pacotes!"
@@ -54,6 +54,7 @@ download_snmpd() {
     fi
 }
 
+# Configuração do Usuário SNMP
 config_snmpd() {
     # Verificar se snmpd está ativo
     if systemctl is-active --quiet snmpd; then
@@ -65,13 +66,14 @@ config_snmpd() {
     while true; do
         read -p "Digite o nome do usuário SNMPD (Deve ser o mesmo configurado no snmp-exporter): " user_snmp
 
+
+        # Testa se a variávl está vazia
         if ! [[ -z "$user_snmp" ]]; then
             break
         fi
-
+    
         print_error "Usuário não pode ser vazio! Digite novamente!"
     done
-    
 
     read -sp "Digite a senha de autenticação do usuário snmpd: " password_auth
 
@@ -83,12 +85,13 @@ config_snmpd() {
         print_error "Falha criar o usuário"
         return 1
     fi
-
-    
 }
+
+
 
 
 # Início do script
 check_root
 main_menu
 update_system
+download_snmpd
