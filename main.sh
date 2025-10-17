@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Precisa criar verificação de senhas na função config_snmpd()
+
 # Cores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -76,7 +78,7 @@ config_snmpd() {
     done
 
     read -sp "Digite a senha de autenticação do usuário snmpd: " password_auth
-
+    echo ""
     read -sp "Digite a senha de criptografia SNMPD: " password_cript
 
     if net-snmp-create-v3-user -ro -a SHA -A $password_auth -x AES -X $password_cript $user_snmp; then
@@ -95,3 +97,4 @@ check_root
 main_menu
 update_system
 download_snmpd
+config_snmpd
