@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Precisa criar verificação de senhas na função config_snmpd()
+# Precisa criar verificação de senhas na função user_snmpd()
 
 # Cores para output
 RED='\033[0;31m'
@@ -48,7 +48,7 @@ update_system() {
 download_snmpd() {
     print_info "Iniciando instalação do net-snmp e dependências..."
 
-    if dnf install net-snmp net-snmp-utils net-snmp-devel -y; then
+    if dnf install net-snmp net-snmp-utils -y; then
         print_success "Pacotes instalados com sucesso!"
     else
         print_error "Falha ao instalar pacotes!"
@@ -57,7 +57,7 @@ download_snmpd() {
 }
 
 # Configuração do Usuário SNMP
-config_snmpd() {
+user_snmpd() {
     # Verificar se snmpd está ativo
     if systemctl is-active --quiet snmpd; then
         print_info "Desativando snmpd..."
@@ -69,7 +69,7 @@ config_snmpd() {
         read -p "Digite o nome do usuário SNMPD (Deve ser o mesmo configurado no snmp-exporter): " user_snmp
 
 
-        # Testa se a variávl está vazia
+        # Testa se a variável está vazia
         if ! [[ -z "$user_snmp" ]]; then
             break
         fi
@@ -89,7 +89,27 @@ config_snmpd() {
     fi
 }
 
+agent_snmp() {
+    TARGET_FOLDER="/etc/snmp"
+    TARGET_FILE="/etc/snmp/snmpd.conf"
 
+    # Verifico se o arquivo existe
+    if teste -f "$TARGET_FILE"; then
+        cp $TARGET_FILE ${TARGET_FILE}.bkp
+        # Esse cat abaixo tá esquisito
+        cat > $TARGET_FILE <<- "EOF"
+            view   all         included   .1
+            group  grupoV3     usm        monitorv3
+            access grupoV3 ""      usm     priv   exact  all    none   none
+        EOF
+    else
+        print_warning "Arquivo $TARGET_FILE não existe"
+        echo ""
+        print_info "Criando arquivo..."
+
+        mkdir -p $TARGET_FOLDER && touch $TARGET_FILE
+    fi
+}
 
 
 # Início do script
@@ -97,4 +117,4 @@ check_root
 main_menu
 update_system
 download_snmpd
-config_snmpd
+user_snmpd
