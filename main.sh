@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Precisa criar verificação de senhas na função user_snmpd()
+# Precisa criar verificação de senhas na função create_user_snmpd()
 
 # Cores para output
 RED='\033[0;31m'
@@ -57,7 +57,7 @@ download_snmpd() {
 }
 
 # Configuração do Usuário SNMP
-user_snmpd() {
+create_user_snmpd() {
 	# Verificar se snmpd está ativo
 	if systemctl is-active --quiet snmpd; then
 		print_info "Desativando snmpd..."
@@ -77,8 +77,10 @@ user_snmpd() {
 		print_error "Usuário não pode ser vazio! Digite novamente!"
 	done
 
+	local password_auth
 	read -sp "Digite a senha de autenticação do usuário snmpd: " password_auth
 	echo ""
+	local password_cript
 	read -sp "Digite a senha de criptografia SNMPD: " password_cript
 
 	if net-snmp-create-v3-user -ro -a SHA -A $password_auth -x AES -X $password_cript $user_snmp; then
@@ -89,7 +91,7 @@ user_snmpd() {
 	fi
 }
 
-agent_snmp() {
+create_agent_snmp() {
 	TARGET_FOLDER="/etc/snmp"
 	TARGET_FILE="/etc/snmp/snmpd.conf"
 
@@ -106,12 +108,17 @@ agent_snmp() {
 		mkdir -p $TARGET_FOLDER && touch $TARGET_FILE
 	fi
 
+	# Adicionando configuração do agent snmp
 	print_info "Alterando o arquivo "$TARGET_FILE"..."
 	cat > "$TARGET_FILE" <<-EOF
 		view   all         included   .1
-		group  grupoV3      usm        monitorv3
+		group  grupoV3      usm        $user_snmp
 		access grupoV3 ""   usm        priv exact  all none none
 	EOF
+
+	print_info "Inciando o serviço snmpd..."
+	systemctl start snmpd
+	systemctl enable snmpd
 }
 
 
@@ -120,5 +127,5 @@ check_root
 main_menu
 update_system
 download_snmpd
-user_snmpd
-agent_snmp
+create_user_snmpd
+create_agent_snmp
