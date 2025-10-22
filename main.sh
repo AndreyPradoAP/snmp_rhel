@@ -124,7 +124,6 @@ create_agent_snmp() {
 
 # Início do script
 check_root
-main_menu
 update_system
 download_snmpd
 create_user_snmpd
