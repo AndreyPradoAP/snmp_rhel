@@ -119,6 +119,8 @@ create_agent_snmp() {
 	print_info "Inciando o serviço snmpd..."
 	systemctl start snmpd
 	systemctl enable snmpd
+
+	print_success "Snmpd configurado com sucesso!"
 }
 
 
